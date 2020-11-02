@@ -1,0 +1,1 @@
+$filter = "*java*"; (Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall).Name | % { $path = "Registry::$_"; Get-ItemProperty $path } | Where-Object { $_.DisplayName -like $filter } | Select-Object -Property DisplayName, PsChildName

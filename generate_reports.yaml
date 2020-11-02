@@ -1,0 +1,26 @@
+---
+- name: Scan for Java JDKs/JREs and generate a report
+  hosts: all
+
+  tasks:
+
+  - name: Include Variables
+    include_vars: vars/main.yaml
+
+  - name: Create temp directory structure
+    ansible.windows.win_file:
+      path: C:\Temp\
+      state: directory
+
+  - name: Copy listPackages.ps1 to host
+    ansible.windows.win_copy:
+      src: files/listPackages.ps1
+      dest: C:\Temp\listPackages.ps1
+
+  - name: Pull list of installed packages
+    ansible.windows.win_shell: C:\Temp\listPackages.ps1 >> C:\Temp\listPackages.log
+    register: installed_products
+
+  - name: Debug
+    debug:
+      msg: "{{ installed_products }}"
