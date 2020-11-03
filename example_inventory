@@ -1,5 +1,6 @@
 [all]
-192.168.42.161
+Windows2016DC ansible_host=192.168.42.161
+Windows10Pro ansible_host=192.168.42.175 ansible_user=Luser
 
 [all:vars]
 ansible_user=Administrator

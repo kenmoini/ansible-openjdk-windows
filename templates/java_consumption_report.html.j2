@@ -65,9 +65,11 @@
           var table = jQuery('#consumptionReport').DataTable({
             "data": [
               {% for host in groups['all'] %}
-                {% for each in detected_java['content'] | b64decode | from_json %}
-                {"DT_RowId": "row_{{ loop.index }}", "java": { "host": "{{ inventory_hostname }}", "DisplayName": "{{ each.DisplayName }}", "PSChildName": "{{ each.PSChildName }}" }},
+              {% if hostvars[host]['detectedJava'] is defined %}
+                {% for each in hostvars[host]['detectedJava'] %}
+                {"DT_RowId": "row_{{ loop.index }}", "java": { "host": "{{ host }}", "DisplayName": "{{ each.DisplayName }}", "PSChildName": "{{ each.PSChildName }}" }},
                 {% endfor %}
+              {% endif %}
               {% endfor %}
             ],
             "columns": [

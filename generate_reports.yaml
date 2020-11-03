@@ -1,6 +1,9 @@
 ---
 - name: Scan for Java JDKs/JREs and generate a report
   hosts: all
+  vars:
+    fixed_timestamp: "{{ ansible_date_time.epoch }}"
+    generated_path: 'C:\Temp\javaReport-{{ fixed_timestamp }}\'
 
   tasks:
     - name: Include Variables
@@ -13,32 +16,53 @@
 
     - name: Create temp directory structure
       ansible.windows.win_file:
-        path: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}"
+        path: "{{ generated_path }}"
         state: directory
 
     - name: Copy listPackages.ps1 to host
-      ansible.windows.win_copy:
+      ansible.windows.win_template:
         src: files/listPackages.ps1
-        dest: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\listPackages.ps1"
+        dest: "{{ generated_path }}listPackages.ps1"
 
     - name: Pull list of installed packages
-      ansible.windows.win_shell: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\listPackages.ps1"
+      ansible.windows.win_shell: ".\\listPackages.ps1"
       args:
-        chdir: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\"
+        chdir: "{{ generated_path }}"
 
     - name: Slurp up the JSON
       slurp:
-        src: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\detectedJava.json"
+        src: "{{ generated_path }}detectedJava.json"
       register: detected_java
+      ignore_errors: yes
+
+    - name: Set the fact per host
+      set_fact:
+        detectedJava: "{{ detected_java['content'] | b64decode }}"
 
     - name: Debug
       debug:
         msg: "{{ detected_java['content'] | b64decode }}"
-      tags:
-        - never
-        - debug
+
+    - name: Debug
+      debug:
+        msg: "{{ detectedJava }}"
 
     - name: Template out the HTML report
       template:
         src: java_consumption_report.html.j2
-        dest: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\java_consumption_report-{{ ansible_date_time.epoch }}.html"
+        dest: "{{ generated_path }}java_consumption_report-{{ fixed_timestamp }}.html"
+      run_once: yes
+
+    - name: Zip up the contents of the scan
+      ansible.windows.win_shell: "Compress-Archive -Path {{ generated_path }} -DestinationPath C:\\Temp\\javaReport-{{ fixed_timestamp }}.zip"
+      run_once: yes
+
+    - name: Remove temporary directory
+      ansible.windows.win_file:
+        path: "{{ generated_path }}"
+        state: absent
+
+    - name: Report generation finished!
+      debug:
+        msg: "You may find the generated bundle at C:\\Temp\\javaReport-{{ fixed_timestamp }}.zip"
+      run_once: yes
