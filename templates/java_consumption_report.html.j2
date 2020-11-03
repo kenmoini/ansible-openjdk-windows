@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" crossorigin="anonymous">
+
+    <title>Current Java Consumption Report - DATE ERE</title>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 mb-5 mt-5 pb-5 border-bottom">
+          <h1>Current Java Consumption Report</h1>
+          <h4>Hosts with Java installed, JRE or JDK</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <table id="consumptionReport">
+            <thead>
+              <tr>
+                <th>Host</th>
+                <th>Installed Java</th>
+                <th>App UUID</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.1.7/js/dataTables.fixedHeader.min.js" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+      <!--
+        jQuery(document).ready( function () {
+          jQuery('#consumptionReport thead tr').clone(true).appendTo( '#consumptionReport thead' );
+          jQuery('#consumptionReport thead tr:eq(1) th').each( function (i) {
+              var title = $(this).text();
+              jQuery(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+      
+              jQuery( 'input', this ).on( 'keyup change', function () {
+                  if ( table.column(i).search() !== this.value ) {
+                      table
+                          .column(i)
+                          .search( this.value )
+                          .draw();
+                  }
+              } );
+          } );
+          var table = jQuery('#consumptionReport').DataTable({
+            "data": [
+              {% for host in groups['all'] %}
+                {% for each in detected_java['content'] | b64decode | from_json %}
+                {"DT_RowId": "row_{{ loop.index }}", "java": { "host": "{{ inventory_hostname }}", "DisplayName": "{{ each.DisplayName }}", "PSChildName": "{{ each.PSChildName }}" }},
+                {% endfor %}
+              {% endfor %}
+            ],
+            "columns": [
+                { data: "java.host" },
+                { data: "java.DisplayName" },
+                { data: "java.PSChildName" }
+            ],
+            orderCellsTop: true,
+            fixedHeader: true
+          });
+        } );
+      //-->
+    </script>
+  </body>
+</html>

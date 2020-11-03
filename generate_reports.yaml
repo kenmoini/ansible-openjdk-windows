@@ -3,24 +3,36 @@
   hosts: all
 
   tasks:
+    - name: Include Variables
+      include_vars: vars/main.yaml
 
-  - name: Include Variables
-    include_vars: vars/main.yaml
+    - name: Create temp directory structure
+      ansible.windows.win_file:
+        path: C:\Temp\
+        state: directory
 
-  - name: Create temp directory structure
-    ansible.windows.win_file:
-      path: C:\Temp\
-      state: directory
+    - name: Copy listPackages.ps1 to host
+      ansible.windows.win_copy:
+        src: files/listPackages.ps1
+        dest: C:\Temp\listPackages.ps1
 
-  - name: Copy listPackages.ps1 to host
-    ansible.windows.win_copy:
-      src: files/listPackages.ps1
-      dest: C:\Temp\listPackages.ps1
+    - name: Pull list of installed packages
+      ansible.windows.win_shell: C:\Temp\listPackages.ps1
+      register: installed_products
 
-  - name: Pull list of installed packages
-    ansible.windows.win_shell: C:\Temp\listPackages.ps1 >> C:\Temp\listPackages.log
-    register: installed_products
+    - name: Slurp up the JSON
+      slurp:
+        src: C:\Temp\detectedJava.json
+      register: detected_java
 
-  - name: Debug
-    debug:
-      msg: "{{ installed_products }}"
+    - name: Debug
+      debug:
+        msg: "{{ detected_java['content'] | b64decode }}"
+      tags:
+        - never
+        - debug
+
+    - name: Template out the HTML report
+      template:
+        src: java_consumption_report.html.j2
+        dest: C:\Temp\java_consumption_report.html

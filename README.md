@@ -1,4 +1,14 @@
+# ansible-openjdk-windows
 
+Generate reports on Java consumption and deploy Red Hat's OpenJDK
+
+## Prerequisites
+
+1. Ensure your environment has Ansible 2.10 installed
+2. Install the WinRM python module: `pip3 install pywinrm`
+3. Copy `example_inventory` to `inventory` and modify as needed
+4. Install the Windows Ansible Collection: `ansible-galaxy collection install ansible.windows`
+5. Ensure the remote hosts are enabled with WinRM: https://docs.ansible.com/ansible/latest/user_guide/windows_setup.html#winrm-setup
 
 ### Running on Mac OS X
 
