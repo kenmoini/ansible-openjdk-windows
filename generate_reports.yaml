@@ -23,6 +23,8 @@
 
     - name: Pull list of installed packages
       ansible.windows.win_shell: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\listPackages.ps1"
+      args:
+        chdir: "C:\\Temp\\javaReport-{{ ansible_date_time.epoch }}\\"
       register: installed_products
 
     - name: Slurp up the JSON
