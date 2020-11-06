@@ -4,6 +4,7 @@
   vars:
     fixed_timestamp: "{{ ansible_date_time.epoch }}"
     generated_path: 'C:\Temp\javaReport-{{ fixed_timestamp }}\'
+    fetch_reports: true
 
   tasks:
     - name: Include Variables
@@ -39,13 +40,13 @@
       set_fact:
         detectedJava: "{{ detected_java['content'] | b64decode }}"
 
-    - name: Debug
-      debug:
-        msg: "{{ detected_java['content'] | b64decode }}"
+#    - name: Debug
+#      debug:
+#        msg: "{{ detected_java['content'] | b64decode }}"
 
-    - name: Debug
-      debug:
-        msg: "{{ detectedJava }}"
+#    - name: Debug
+#      debug:
+#        msg: "{{ detectedJava }}"
 
     - name: Template out the HTML report
       template:
@@ -66,3 +67,27 @@
       debug:
         msg: "You may find the generated bundle at C:\\Temp\\javaReport-{{ fixed_timestamp }}.zip"
       run_once: yes
+      when: not fetch_reports|bool
+
+    - name: Generate local directory for report fetching
+      file:
+        path: "./.generated"
+        state: directory
+      delegate_to: localhost
+      when: fetch_reports|bool
+
+    - name: Fetch report bundle file
+      fetch:
+        src: "C:\\Temp\\javaReport-{{ fixed_timestamp }}.zip"
+        dest: "./.generated/"
+        flat: yes
+      when: fetch_reports|bool
+      run_once: yes
+
+    - name: Report generation finished!
+      debug:
+        msg: "You may find the generated bundle at ./.generated/javaReport-{{ fixed_timestamp }}.zip"
+      delegate_to: localhost
+      run_once: yes
+      when: fetch_reports|bool
+
