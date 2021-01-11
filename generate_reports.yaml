@@ -4,7 +4,13 @@
   vars:
     fixed_timestamp: "{{ ansible_date_time.epoch }}"
     generated_path: 'C:\Temp\javaReport-{{ fixed_timestamp }}\'
+    delete_remote_generated_assets: false
     fetch_reports: true
+    oracleJavaSearchFilters:
+      - Java
+      - JRE
+    openJDKSearchFilters:
+      - OpenJDK
 
   tasks:
     - name: Include Variables
@@ -22,17 +28,37 @@
 
     - name: Copy listPackages.ps1 to host
       ansible.windows.win_template:
-        src: files/listPackages.ps1
-        dest: "{{ generated_path }}listPackages.ps1"
+        src: files/listPackagesWithInput.ps1
+        dest: "{{ generated_path }}listPackagesWithInput.ps1"
+      vars:
+        filter: filterTest
 
     - name: Pull list of installed packages
-      ansible.windows.win_shell: ".\\listPackages.ps1"
+      ansible.windows.win_shell: ".\\listPackagesWithInput.ps1"
       args:
         chdir: "{{ generated_path }}"
+      vars:
+        filter: filterTest
+      register: winShellOut
+
+    #    - name: Copy listPackages.ps1 to host
+    #      ansible.windows.win_template:
+    #        src: files/listPackages.ps1
+    #        dest: "{{ generated_path }}listPackages.ps1"
+    #
+    #    - name: Pull list of installed packages
+    #      ansible.windows.win_shell: ".\\listPackages.ps1"
+    #      args:
+    #        chdir: "{{ generated_path }}"
+    #      register: winShellOut
+
+    - name: Debug shell script
+      debug:
+        msg: "{{ winShellOut }}"
 
     - name: Slurp up the JSON
       slurp:
-        src: "{{ generated_path }}detectedJava.json"
+        src: "{{ generated_path }}detectedJavaConcat.json"
       register: detected_java
       ignore_errors: yes
 
@@ -40,13 +66,21 @@
       set_fact:
         detectedJava: "{{ detected_java['content'] | b64decode }}"
 
-#    - name: Debug
-#      debug:
-#        msg: "{{ detected_java['content'] | b64decode }}"
+    - name: Debug
+      debug:
+        msg: "{{ detected_java['content'] }}"
 
-#    - name: Debug
-#      debug:
-#        msg: "{{ detectedJava }}"
+    - name: Debug
+      debug:
+        msg: "{{ detected_java['content'] | b64decode }}"
+
+    - name: Debug fact
+      debug:
+        msg: "{{ hostvars[inventory_hostname]['detectedJava'] }}"
+
+    #    - name: Debug
+    #      debug:
+    #        msg: "{{ detectedJava }}"
 
     - name: Template out the HTML report
       template:
@@ -62,6 +96,7 @@
       ansible.windows.win_file:
         path: "{{ generated_path }}"
         state: absent
+      when: delete_remote_generated_assets|bool
 
     - name: Report generation finished!
       debug:
@@ -90,4 +125,3 @@
       delegate_to: localhost
       run_once: yes
       when: fetch_reports|bool
-

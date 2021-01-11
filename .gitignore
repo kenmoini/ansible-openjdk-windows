@@ -1,2 +1,4 @@
 inventory
 .generated
+.generated/
+.generated/*
